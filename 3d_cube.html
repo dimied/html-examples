@@ -17,9 +17,11 @@
       #container {
         width: 100%;
         perspective: 800;
+        display: flex;
+        flex-direction: row;
       }
 
-      @keyframes spin {
+      @keyframes rotateXY {
         from {
           transform: rotateY(0) rotateX(0);
         }
@@ -28,13 +30,56 @@
         }
       }
 
+      @keyframes tensteps {
+        from {
+          transform: rotateY(0) rotateX(0);
+        }
+        10% {
+            transform: rotateY(-90deg);
+        }
+        20% {
+            transform: rotateY(0);
+        }
+        30% {
+            transform: rotateY(90deg);
+        }
+        40% {
+            transform: rotateY(0);
+        }
+        50% {
+            transform: rotateX(90deg);
+        }
+        60% {
+            transform: rotateX(0);
+        }
+        70% {
+            transform: rotateX(-90deg) scale3d(1,1,1);
+        }
+        80% {
+            transform: rotateX(-180deg) scale3d(0.8,0.8,0.8);
+        }
+        90% {
+            transform: rotateX(-270deg) scale3d(1.2,1.2,1.2);
+        }
+        to {
+          transform: rotateX(-360deg)  scale3d(1,1,1);
+        }
+      }
+
       .cube3d {
         position: relative;
-        top: 240px;
-        margin: 0 auto;
-
-        animation: spin 120s infinite linear;
+        margin: 0 auto;        
         transform-style: preserve-3d;
+      }
+
+      .top-cube {
+        top: 100px;
+        animation: rotateXY 30s infinite linear;
+      }
+
+      .second-cube {
+        top: 100px;
+        animation: tensteps 10s infinite linear;
       }
 
       .cube3d > div {
@@ -47,8 +92,8 @@
 
       .cube3d,
       .cube3d > div {
-        height: 360px;
-        width: 360px;
+        height: 320px;
+        width: 320px;
       }
 
       .cube3d > div:hover {
@@ -63,38 +108,59 @@
       /* CUBE SIDES */
       .front {
         background-color: blanchedalmond;
-        transform: translateZ(180px);
+        transform: translateZ(160px);
       }
 
       .back {
         background-color: blanchedalmond;
-        transform: rotateY(180deg) translateZ(180px);
+        transform: rotateY(180deg) translateZ(160px);
       }
 
       .left {
         background-color: rgb(199, 240, 138);
-        transform: rotateY(-90deg) translateZ(180px);
+        transform: rotateY(-90deg) translateZ(160px);
       }
 
       .right {
         background-color: pink;
-        transform: rotateY(90deg) translateZ(180px);
+        transform: rotateY(90deg) translateZ(160px);
       }
 
       .top {
         background-color: azure;
-        transform: rotateX(90deg) translateZ(180px);
+        transform: rotateX(90deg) translateZ(160px);
       }
 
       .bottom {
         background-color: violet;
-        transform: rotateX(-90deg) translateZ(180px);
+        transform: rotateX(-90deg) translateZ(160px);
       }
     </style>
   </head>
   <body>
     <div id="container">
-      <div class="cube3d">
+      <div class="cube3d top-cube">
+        <div class="front">
+          <a href="https://www.twitter.com">Twitter</a>
+        </div>
+        <div class="back">
+          <a href="https://www.amazon.com">Amazon</a>
+        </div>
+        <div class="top">
+          <a href="https://www.google.com">google</a>
+        </div>
+        <div class="bottom">
+          <a href="https://www.google.de">google (DE)</a>
+        </div>
+        <div class="left">
+          <a href="https://www.facebook.com">Facebook</a>
+        </div>
+        <div class="right">
+          <a href="https://www.netflix.com">Netflix</a>
+        </div>
+      </div>
+
+      <div class="cube3d second-cube">
         <div class="front">
           <a href="https://www.twitter.com">Twitter</a>
         </div>
