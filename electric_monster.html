@@ -25,6 +25,16 @@
         };
       }
 
+      var newVersion = false;
+      if (window.location.search) {
+        newVersion = true;
+      }
+      //console.log('W:', window.location)
+
+      function versionToggle() {
+        newVersion = !newVersion;
+      }
+
       var monster = (function () {
         function raf() {
           var f,
@@ -70,9 +80,73 @@
             w = sizes[0],
             h = sizes[1],
             mouse = { x: false, y: false },
-            last_mouse = {};
+            last_mouse = {},
+            /**/
+            maxl = 300,
+            minl = 50,
+            n = 50,
+            numt = 50,
+            tent = [],
+            target = { x: 0, y: 0 },
+            last_target = {},
+            t = 0,
+            q = 10;
 
-          //initiation
+          /*
+          Segment: [
+            l,
+            ang,
+            pos,
+            nextPos
+          ]
+          */
+
+          function newSegment(parent, l, a, first) {
+            var res = first ? parent : parent[3],
+              pos = {
+                x: res.x,
+                y: res.y,
+              };
+            res = [
+              l,
+              a,
+              pos,
+              {
+                x: pos.x + l * Math.cos(a),
+                y: pos.y + l * Math.sin(a),
+              },
+              /*first,*/
+            ];
+
+            return res;
+          }
+
+          function updateSeg(s, t) {
+            var d,
+              l = s[0],
+              p = s[2],
+              n = s[3];
+            var a = (s[1] = Math.atan2(t.y - p.y, t.x - p.x));
+            d = a - Math.PI;
+            p.x = t.x + l * Math.cos(d);
+            p.y = t.y + l * Math.sin(d);
+            n.x = p.x + l * Math.cos(a);
+            n.y = p.y + l * Math.sin(a);
+          }
+
+          function fallbackSeg(s, t) {
+            var l = s[0],
+              p = s[2],
+              n = [3];
+            p.x = t.x;
+            p.y = t.y;
+            n.x = p.x + l * Math.cos(s[1]);
+            n.y = p.y + l * Math.sin(s[1]);
+          }
+
+          function showSeg(s) {
+            c.lineTo(s[3].x, s[3].y);
+          }
 
           class segment {
             constructor(parent, l, a, first) {
@@ -113,6 +187,32 @@
             }
           }
 
+          function ns(parent, l, a, first) {
+            return newVersion
+              ? newSegment(parent, l, a, first)
+              : new segment(parent, l, a, first);
+          }
+
+          function ss(s) {
+            return newVersion ? showSeg(s) : s.show();
+          }
+
+          function us(s, t) {
+            return newVersion ? updateSeg(s, t) : s.update(t);
+          }
+
+          function usp(s, t) {
+            return newVersion ? updateSeg(s, t[2]) : s.update(t.pos);
+          }
+
+          function fs(s, t) {
+            return newVersion ? fallbackSeg(s, t) : s.fallback(t);
+          }
+
+          function fsnp(s, t) {
+            return newVersion ? fallbackSeg(s, t[3]) : s.fallback(t.nextPos);
+          }
+
           class tentacle {
             constructor(x, y, l, n, a) {
               this.x = x;
@@ -121,48 +221,59 @@
               this.n = n;
               this.t = {};
               this.rand = Math.random();
-              this.segments = [new segment(this, this.l / this.n, 0, true)];
+              var sl = this.l / this.n;
+
+              this.segments = [ns(this, sl, 0, true)];
+
               for (let i = 1; i < this.n; i++) {
-                this.segments.push(
-                  new segment(this.segments[i - 1], this.l / this.n, 0, false)
-                );
+                this.segments.push(ns(this.segments[i - 1], sl, 0, false));
               }
             }
             move(last_target, target) {
               this.angle = Math.atan2(target.y - this.y, target.x - this.x);
-              this.dt =
-                dist(last_target.x, last_target.y, target.x, target.y) + 5;
+
+              var d = dist(last_target.x, last_target.y, target.x, target.y);
+
+              this.dt = d + 5;
+
               this.t = {
                 x: target.x - 0.8 * this.dt * Math.cos(this.angle),
                 y: target.y - 0.8 * this.dt * Math.sin(this.angle),
               };
+
               if (this.t.x) {
-                this.segments[this.n - 1].update(this.t);
+                us(this.segments[this.n - 1], this.t);
+                //this.segments[this.n - 1].update(this.t);
               } else {
-                this.segments[this.n - 1].update(target);
+                us(this.segments[this.n - 1], target);
+                //this.segments[this.n - 1].update(target);
               }
+
               for (let i = this.n - 2; i >= 0; i--) {
-                this.segments[i].update(this.segments[i + 1].pos);
+                usp(this.segments[i], this.segments[i + 1]);
               }
-              if (
-                dist(this.x, this.y, target.x, target.y) <=
-                this.l + dist(last_target.x, last_target.y, target.x, target.y)
-              ) {
-                this.segments[0].fallback({ x: this.x, y: this.y });
+
+              if (dist(this.x, this.y, target.x, target.y) <= this.l + d) {
+                fs(this.segments[0], { x: this.x, y: this.y });
+                //this.segments[0].fallback({ x: this.x, y: this.y });
                 for (let i = 1; i < this.n; i++) {
-                  this.segments[i].fallback(this.segments[i - 1].nextPos);
+                  fsnp(this.segments[i], this.segments[i - 1]);
+                  //this.segments[i].fallback(this.segments[i - 1].nextPos);
                 }
               }
             }
+
             show(target) {
               if (dist(this.x, this.y, target.x, target.y) <= this.l) {
                 var l = c.globalCompositeOperation || "source-over";
                 c.globalCompositeOperation = "lighter";
                 c.beginPath();
                 c.lineTo(this.x, this.y);
+
                 for (let i = 0; i < this.n; i++) {
-                  this.segments[i].show();
+                  ss(this.segments[i]);
                 }
+
                 c.strokeStyle =
                   "hsl(" +
                   (this.rand * 60 + 180) +
@@ -176,6 +287,7 @@
                 c.globalCompositeOperation = l;
               }
             }
+
             show2(target) {
               c.beginPath();
               if (dist(this.x, this.y, target.x, target.y) <= this.l) {
@@ -183,21 +295,11 @@
                 c.fillStyle = "white";
               } else {
                 c.arc(this.x, this.y, this.rand * 2, 0, 2 * Math.PI);
-                c.fillStyle = "darkcyan";
+                c.fillStyle = "green";
               }
               c.fill();
             }
           }
-
-          let maxl = 300,
-            minl = 50,
-            n = 25,
-            numt = 120,
-            tent = [],
-            target = { x: 0, y: 0 },
-            last_target = {},
-            t = 0,
-            q = 10;
 
           for (let i = 0; i < numt; i++) {
             tent.push(
@@ -231,7 +333,7 @@
             target.x += target.errx / 10;
             target.y += target.erry / 10;
 
-            t += 0.01;
+            t += 0.001;
 
             c.beginPath();
             c.arc(
@@ -241,16 +343,16 @@
               0,
               2 * Math.PI
             );
-            c.fillStyle = "hsl(210,100%,80%)";
+            c.fillStyle = "hsl(150,100%,80%)";
             c.fill();
 
             for (i = 0; i < numt; i++) {
               tent[i].move(last_target, target);
               tent[i].show2(target);
-              tent[i].show(target);
+              //tent[i].show(target);
             }
             for (i = 0; i < numt; i++) {
-              //tent[i].show(target);
+              tent[i].show(target);
             }
             last_target.x = target.x;
             last_target.y = target.y;
@@ -274,10 +376,11 @@
           });
 
           var r = raf();
+
           function loop() {
-            r(loop);
             c.clearRect(0, 0, w, h);
             draw();
+            r(loop);
           }
 
           window.addEventListener("resize", function () {
@@ -298,5 +401,9 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
-  </body>
+    <!--
+    <div style="position: fixed; bottom: 0; left: 0">
+      <button onclick="versionToggle()">C</button>
+    </div>
+  --></body>
 </html>
