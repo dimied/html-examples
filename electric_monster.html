@@ -25,15 +25,24 @@
         };
       }
 
-      var newVersion = false;
+      var newVersionSegment = false,
+        newVersionTentacle = false;
       if (window.location.search) {
-        newVersion = true;
-      }
-      //console.log('W:', window.location)
+        var searchParts = window.location.search.substr(1).split("&");
+        console.log("W:", window.location.search, searchParts);
+        function hsp(n) {
+          return (
+            searchParts.filter(function (p) {
+              return p[0] === n;
+            }).length > 0
+          );
+        }
 
-      function versionToggle() {
-        newVersion = !newVersion;
+        newVersionSegment = hsp("s");
+        newVersionTentacle = hsp("t");
       }
+      console.log("Versions:", newVersionSegment, newVersionTentacle);
+      //
 
       var monster = (function () {
         function raf() {
@@ -69,6 +78,45 @@
           return Math.sqrt(x * x + y * y);
         }
 
+        class segment {
+          constructor(parent, l, a, first) {
+            this.first = first;
+            if (first) {
+              this.pos = {
+                x: parent.x,
+                y: parent.y,
+              };
+            } else {
+              this.pos = {
+                x: parent.nextPos.x,
+                y: parent.nextPos.y,
+              };
+            }
+            this.l = l;
+            this.ang = a;
+            this.nextPos = {
+              x: this.pos.x + this.l * Math.cos(this.ang),
+              y: this.pos.y + this.l * Math.sin(this.ang),
+            };
+          }
+          update(t) {
+            this.ang = Math.atan2(t.y - this.pos.y, t.x - this.pos.x);
+            this.pos.x = t.x + this.l * Math.cos(this.ang - Math.PI);
+            this.pos.y = t.y + this.l * Math.sin(this.ang - Math.PI);
+            this.nextPos.x = this.pos.x + this.l * Math.cos(this.ang);
+            this.nextPos.y = this.pos.y + this.l * Math.sin(this.ang);
+          }
+          fallback(t) {
+            this.pos.x = t.x;
+            this.pos.y = t.y;
+            this.nextPos.x = this.pos.x + this.l * Math.cos(this.ang);
+            this.nextPos.y = this.pos.y + this.l * Math.sin(this.ang);
+          }
+          show(c) {
+            c.lineTo(this.nextPos.x, this.nextPos.y);
+          }
+        }
+
         return function (id, props) {
           console.log("M");
           id = id || "canvas";
@@ -84,7 +132,7 @@
             /**/
             maxl = 300,
             minl = 50,
-            n = 50,
+            n = 30,
             numt = 50,
             tent = [],
             target = { x: 0, y: 0 },
@@ -125,9 +173,10 @@
             var d,
               l = s[0],
               p = s[2],
-              n = s[3];
-            var a = (s[1] = Math.atan2(t.y - p.y, t.x - p.x));
+              n = s[3],
+              a = Math.atan2(t.y - p.y, t.x - p.x);
             d = a - Math.PI;
+            s[1] = a;
             p.x = t.x + l * Math.cos(d);
             p.y = t.y + l * Math.sin(d);
             n.x = p.x + l * Math.cos(a);
@@ -137,80 +186,167 @@
           function fallbackSeg(s, t) {
             var l = s[0],
               p = s[2],
-              n = [3];
+              n = s[3];
             p.x = t.x;
             p.y = t.y;
             n.x = p.x + l * Math.cos(s[1]);
             n.y = p.y + l * Math.sin(s[1]);
           }
 
-          function showSeg(s) {
+          function showSeg(s, c) {
             c.lineTo(s[3].x, s[3].y);
           }
 
-          class segment {
-            constructor(parent, l, a, first) {
-              this.first = first;
-              if (first) {
-                this.pos = {
-                  x: parent.x,
-                  y: parent.y,
-                };
-              } else {
-                this.pos = {
-                  x: parent.nextPos.x,
-                  y: parent.nextPos.y,
-                };
-              }
-              this.l = l;
-              this.ang = a;
-              this.nextPos = {
-                x: this.pos.x + this.l * Math.cos(this.ang),
-                y: this.pos.y + this.l * Math.sin(this.ang),
-              };
-            }
-            update(t) {
-              this.ang = Math.atan2(t.y - this.pos.y, t.x - this.pos.x);
-              this.pos.x = t.x + this.l * Math.cos(this.ang - Math.PI);
-              this.pos.y = t.y + this.l * Math.sin(this.ang - Math.PI);
-              this.nextPos.x = this.pos.x + this.l * Math.cos(this.ang);
-              this.nextPos.y = this.pos.y + this.l * Math.sin(this.ang);
-            }
-            fallback(t) {
-              this.pos.x = t.x;
-              this.pos.y = t.y;
-              this.nextPos.x = this.pos.x + this.l * Math.cos(this.ang);
-              this.nextPos.y = this.pos.y + this.l * Math.sin(this.ang);
-            }
-            show() {
-              c.lineTo(this.nextPos.x, this.nextPos.y);
-            }
-          }
-
           function ns(parent, l, a, first) {
-            return newVersion
+            return newVersionSegment
               ? newSegment(parent, l, a, first)
               : new segment(parent, l, a, first);
           }
 
-          function ss(s) {
-            return newVersion ? showSeg(s) : s.show();
+          function ss(s, c) {
+            return newVersionSegment ? showSeg(s, c) : s.show(c);
           }
 
           function us(s, t) {
-            return newVersion ? updateSeg(s, t) : s.update(t);
+            return newVersionSegment ? updateSeg(s, t) : s.update(t);
           }
 
           function usp(s, t) {
-            return newVersion ? updateSeg(s, t[2]) : s.update(t.pos);
+            return newVersionSegment ? updateSeg(s, t[2]) : s.update(t.pos);
           }
 
           function fs(s, t) {
-            return newVersion ? fallbackSeg(s, t) : s.fallback(t);
+            return newVersionSegment ? fallbackSeg(s, t) : s.fallback(t);
           }
 
           function fsnp(s, t) {
-            return newVersion ? fallbackSeg(s, t[3]) : s.fallback(t.nextPos);
+            return newVersionSegment
+              ? fallbackSeg(s, t[3])
+              : s.fallback(t.nextPos);
+          }
+
+          function nt(x, y, l, n, a) {
+            return newVersionTentacle
+              ? newTentacle(x, y, l, n, a)
+              : new tentacle(x, y, l, n, a);
+          }
+
+          function mt(tent, last_target, target) {
+            return newVersionTentacle
+              ? moveTent(tent, last_target, target)
+              : tent.move(last_target, target);
+          }
+
+          function st(tent, target, c) {
+            return newVersionTentacle
+              ? showTent(tent, target, c)
+              : tent.show(target, c);
+          }
+
+          function stc(tent, target, c) {
+            return newVersionTentacle
+              ? tentShowCircle(tent, target, c)
+              : tent.showCircle(target, c);
+          }
+
+          function newTentacle(x, y, l, n, a) {
+            var t = {},
+              pos = { x: x, y: y },
+              rand = Math.random(),
+              sl = l / n,
+              segments = [ns(pos, sl, 0, true)];
+
+            for (let i = 1; i < n; i++) {
+              segments.push(ns(segments[i - 1], sl, 0, false));
+            }
+            return [pos, segments, l, n, rand, t];
+          }
+
+          function moveTent(tent, last_target, target) {
+            //this.angle = Math.atan2(target.y - this.y, target.x - this.x);
+            var p = tent[0],
+              segments = tent[1],
+              l = tent[2],
+              n = tent[3],
+              angle = Math.atan2(target.y - p.y, target.x - p.x),
+              d = dist(last_target.x, last_target.y, target.x, target.y),
+              dt = d + 5;
+
+            var t = {
+              x: target.x - 0.8 * dt * Math.cos(angle),
+              y: target.y - 0.8 * dt * Math.sin(angle),
+            };
+            tent[5] = t;
+
+            if (t.x) {
+              us(segments[n - 1], t);
+              //this.segments[this.n - 1].update(this.t);
+            } else {
+              us(segments[n - 1], target);
+              //this.segments[this.n - 1].update(target);
+            }
+
+            for (let i = n - 2; i >= 0; i--) {
+              usp(segments[i], segments[i + 1]);
+            }
+
+            if (dist(p.x, p.y, target.x, target.y) <= l + d) {
+              fs(segments[0], { x: p.x, y: p.y });
+              //this.segments[0].fallback({ x: this.x, y: this.y });
+              for (let i = 1; i < n; i++) {
+                fsnp(segments[i], segments[i - 1]);
+                //this.segments[i].fallback(this.segments[i - 1].nextPos);
+              }
+            }
+          }
+
+          function strokeColor(rand) {
+            return (
+              "hsl(" + (rand * 60 + 180) + ",100%," + (rand * 60 + 25) + "%)"
+            );
+          }
+
+          function showTent(tent, target, c) {
+            var p = tent[0],
+              segments = tent[1],
+              l = tent[2],
+              n = tent[3],
+              rand = tent[4];
+
+            if (dist(p.x, p.y, target.x, target.y) <= l) {
+              console.log("Hit");
+              var t = c.globalCompositeOperation || "source-over";
+              c.globalCompositeOperation = "lighter";
+              c.beginPath();
+              c.lineTo(p.x, p.y);
+
+              for (let i = 0; i < n; i++) {
+                ss(segments[i], c);
+              }
+
+              c.strokeStyle = strokeColor(rand);
+
+              c.lineWidth = rand * 2;
+              c.lineCap = "round";
+              c.lineJoin = "round";
+              c.stroke();
+              c.globalCompositeOperation = t;
+            }
+          }
+
+          function tentShowCircle(tent, target, c) {
+            var p = tent[0],
+              l = tent[2],
+              rand = tent[4];
+            c.beginPath();
+            if (dist(p.x, p.y, target.x, target.y) <= l) {
+              c.arc(p.x, p.y, 2 * rand + 1, 0, 2 * Math.PI);
+              c.fillStyle = "white";
+            } else {
+              c.arc(p.x, p.y, rand * 2, 0, 2 * Math.PI);
+              c.fillStyle = "green";
+            }
+            c.fill();
           }
 
           class tentacle {
@@ -263,7 +399,7 @@
               }
             }
 
-            show(target) {
+            show(target, c) {
               if (dist(this.x, this.y, target.x, target.y) <= this.l) {
                 var l = c.globalCompositeOperation || "source-over";
                 c.globalCompositeOperation = "lighter";
@@ -271,7 +407,7 @@
                 c.lineTo(this.x, this.y);
 
                 for (let i = 0; i < this.n; i++) {
-                  ss(this.segments[i]);
+                  ss(this.segments[i], c);
                 }
 
                 c.strokeStyle =
@@ -288,7 +424,7 @@
               }
             }
 
-            show2(target) {
+            showCircle(target, c) {
               c.beginPath();
               if (dist(this.x, this.y, target.x, target.y) <= this.l) {
                 c.arc(this.x, this.y, 2 * this.rand + 1, 0, 2 * Math.PI);
@@ -303,7 +439,7 @@
 
           for (let i = 0; i < numt; i++) {
             tent.push(
-              new tentacle(
+              nt(
                 Math.random() * w,
                 Math.random() * h,
                 Math.random() * (maxl - minl) + minl,
@@ -312,7 +448,8 @@
               )
             );
           }
-          function draw() {
+
+          function draw(c) {
             //animation
             if (mouse.x) {
               target.errx = mouse.x - target.x;
@@ -347,12 +484,16 @@
             c.fill();
 
             for (i = 0; i < numt; i++) {
-              tent[i].move(last_target, target);
-              tent[i].show2(target);
+              //tent[i].move(last_target, target);
+              //tent[i].showCircle(target, c);
+
+              mt(tent[i], last_target, target);
+              stc(tent[i], target, c);
               //tent[i].show(target);
             }
             for (i = 0; i < numt; i++) {
-              tent[i].show(target);
+              st(tent[i], target, c);
+              //tent[i].show(target, c);
             }
             last_target.x = target.x;
             last_target.y = target.y;
@@ -379,7 +520,7 @@
 
           function loop() {
             c.clearRect(0, 0, w, h);
-            draw();
+            draw(c);
             r(loop);
           }
 
@@ -394,8 +535,10 @@
       })();
 
       window.onload = function () {
-        monster();
-        //setInterval(loop, 1000 / 60);
+        var props = {
+          sizes: [window.innerWidth, window.innerHeight],
+        };
+        monster(null, props);
       };
     </script>
   </head>
