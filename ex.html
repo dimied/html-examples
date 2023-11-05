@@ -1,0 +1,61 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+</head>
+<body>
+<div id="a1"></div>
+<div id="a2"></div>
+<script>
+
+function doIt(){
+	var idx, sum = 0, limit=1000000;
+	var el1 = document.getElementById("a1");
+	var el2 = document.getElementById("a1");
+
+	var myTime = function(){
+		return (new Date()).getTime();
+	}
+	if(performance && typeof performance.now === 'function'){
+		myTime = function(){
+			return performance.now();
+		}
+		console.log("Yeaah, performance");
+	}
+
+	if(!el1 || !el2){
+		console.log("Elements not found");
+		return;
+	}
+	var startTimepoint = (new Date()).getTime(), endTimepoint1, endTimepoint2,
+	 endTimepointHTML1, endTimepointHTML2;
+
+	for(idx=0; idx< limit; idx++){
+		sum += idx%100 + 16475*idx + idx%7485 + (idx/2)*2039;
+	}
+	endTimepoint1 = myTime();
+	a1.innerText = "" + sum;
+	endTimepointHTML1 = myTime();
+	
+	sum = 0;
+	startTimepoint = myTime();
+	for(idx=0; idx< limit; idx++){
+		sum += idx%100 + 16475*idx + idx%7485 + (idx/2)*2039;
+		a2.innerText = "" + sum;
+	}
+	endTimepoint2 = myTime();
+
+	console.log("Time calc -> add: ", 
+			endTimepoint1 - startTimepoint,
+			endTimepointHTML1 - startTimepoint,
+			endTimepointHTML1 - endTimepoint1);
+	
+	console.log("Time calc & add: ", 
+			endTimepoint2 - startTimepoint);
+}
+window.onload = function(){
+	console.log("Loaded");
+	doIt();
+};
+</script>
+</body>
+</html>

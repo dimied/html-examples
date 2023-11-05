@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <style>
+      .pbb {
+        width: 12cm;
+        height: 14cm;
+        page-break-after: auto;
+        break-inside: avoid-page;
+      }
+      .a {
+        background-color: antiquewhite;
+      }
+      .b {
+        background-color: lightcyan;
+      }
+      .c {
+        background-color: lightgrey;
+      }
+      @page {
+        size: a4 landscape;
+      }
+    </style>
+
+    <script>
+      function MyObject() {}
+      
+      var obj = (function () {
+        var idx,
+          length = 10 * 1000;
+        var arr1 = [],
+          arr2 = [],
+          arr3 = [],
+          arr4 = [];
+
+        var p = "Hello",
+          rest,
+          o;
+
+        for (idx = 0; idx < length; idx++) {
+          rest = idx % 3;
+          arr1.push({
+            name: "arr" + idx,
+            p: p,
+            selected: rest === 0 ? true : rest == 1 ? false : undefined,
+          });
+        }
+
+        for (idx = 0; idx < length; idx++) {
+          rest = idx % 3;
+          o = new MyObject();
+          o.name = name;
+          o.p = p;
+          var selected = rest === 0 ? true : rest == 1 ? false : undefined;
+
+          if (typeof selected === "boolean") {
+            o.selected = selected;
+          }
+          arr4.push(o);
+        }
+
+        for (idx = 0; idx < length; idx++) {
+          rest = idx % 3;
+          var val = rest === 0 ? true : rest == 1 ? false : undefined;
+          arr2.push(["arb" + idx, p, val]);
+        }
+
+        for (idx = 0; idx < length; idx++) {
+          rest = idx % 3;
+          var val = rest === 0 ? true : rest == 1 ? false : undefined;
+          arr3.push("art" + idx);
+          arr3.push(p);
+          arr3.push(val);
+        }
+
+        return {
+          arr1: arr1,
+          arr2: arr2,
+          arr3: arr3,
+          arr4: arr4,
+        };
+      })();
+      console.log("OBJ:", obj);
+    </script>
+  </head>
+  <body>
+    <div>
+      <div class="pbb a">A</div>
+      <div class="pbb b">B</div>
+      <div class="pbb c">C</div>
+      <div class="pbb a">A</div>
+      <div class="pbb b">B</div>
+      <div class="pbb c">C</div>
+      <div class="pbb a">A</div>
+      <div class="pbb b">B</div>
+      <div class="pbb c">C</div>
+      <div class="pbb a">A</div>
+      <div class="pbb b">B</div>
+      <div class="pbb c">C</div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Lotto Checker</title>
+    <meta charset="utf-8">
+    <script>
+        var myNumbers = [
+            {
+                numbers: [11,24,34,39,44,48],
+                super: 9
+            },
+            {
+                numbers: [3,4,10,33,34,39],
+                super: 9
+            },
+            {
+                numbers: [14,17,18,23,34,36],
+                super: 9
+            },
+            {
+                numbers: [13,15,24,27,38,42],
+                super: 9
+            },
+            {
+                numbers: [10,13,27,30,37,46],
+                super: 9
+            },
+            {
+                numbers: [3,20,31,34,44,49],
+                super: 9
+            },
+            {
+                numbers: [16,18,19,35,37,39],
+                super: 9
+            },
+            {
+                numbers: [5,12,26,30,40,45],
+                super: 9
+            },
+            /**
+             */
+            {
+                numbers: [3,5,13,17,34,47],
+                super: 8
+            },
+            {
+                numbers: [2,12,20,23,34,39],
+                super: 8
+            },
+            {
+                numbers: [1,6,11,27,33,38],
+                super: 8
+            },
+            {
+                numbers: [3,6,16,19,34,39],
+                super: 8
+            },
+            {
+                numbers: [1,5,11,19,23,37],
+                super: 8
+            },
+            {
+                numbers: [6,8,15,19,32,44],
+                super: 8
+            }
+        ];
+
+        function clearResult()
+        {
+            var el = document.getElementById("result");
+            if(el)
+            {
+                el.innerHTML = "";
+            }
+        }
+
+        function clearErrors()
+        {
+            var el = document.getElementById("errorlist");
+            if(el)
+            {
+                el.innerHTML = "";
+            }
+        }
+        function addError(msg, addFirst)
+        {
+            var el = document.getElementById("errorlist");
+            if(el)
+            {
+                if(addFirst)
+                {
+                    el.innerHTML = "<li> " + msg + "</li>\n" + el.innerHTML;
+                } else {
+                    el.innerHTML += "<li> " + msg + "</li>\n";
+                }
+                
+            }
+        }
+
+        function addResult(msg, addFirst)
+        {
+            var el = document.getElementById("result");
+            if(el)
+            {
+                if(addFirst)
+                {
+                    el.innerHTML = "<li> " + msg + "</li>\n" + el.innerHTML;
+                } else {
+                    el.innerHTML += "<li> " + msg + "</li>\n";
+                }
+                
+            }
+        }
+
+        function checkUnique(obj)
+        {
+            if(obj && obj.numbers && obj.numbers.length === 6 && 
+            (obj.super > 0 && obj.super < 10))
+            {
+                obj.numbers.sort(function(n1, n2){
+                    if(n1 < n2)
+                    {
+                        return -1;
+                    }
+                    if(n1 > n2)
+                    {
+                        return 1;
+                    }
+                    return 0;
+                });
+
+                var prev;
+
+                for(var i =1; i < obj.numbers.length; i++)
+                {
+                    prev = obj.numbers.indexOf(obj.numbers[i]);
+                    if(prev < i)
+                    {
+                        addError("Duplikat gefunden fuer " + obj.numbers[i] + "|"+ JSON.stringify(obj.numbers))
+                        return false;
+                    }
+                }
+                //console.log("Sorted: " + obj.numbers);
+                return true;
+            } else {
+                addError("Ungueltige Eingabe." + JSON.stringify(obj))
+                return false;
+            }
+        }
+
+        function compare(obj)
+        {
+            var idx, checkIdx, checkObj, numHits,foundSuperzahl;
+            clearResult();
+
+            if(checkUnique(obj))
+            {
+                for(idx=0; idx < myNumbers.length; idx++)    
+                {
+                    numHits = 0;
+                    checkObj = myNumbers[idx];
+
+                    //console.log("Check: " + checkObj);
+
+                    if(!checkUnique(checkObj))
+                    {
+                        addError("Pruefobjekt nicht gueltig: @"+idx+ "|" + JSON.stringify(checkObj))
+                        continue;
+                    }
+
+                    foundSuperzahl = (obj.super == checkObj.super);
+                    
+                    for(checkIdx = 0; checkIdx < obj.numbers.length; checkIdx++)
+                    {
+                        var n = obj.numbers[checkIdx];
+
+                        if(checkObj.numbers.indexOf(n) >= 0)
+                        {
+                            ++numHits;
+                        }
+                    }
+
+
+                    if((numHits > 1 && foundSuperzahl) || (numHits>2))
+                    {
+                        addResult("<strong>Gefunden fuer: " + JSON.stringify(checkObj)+
+                            "|Treffer: "+ numHits+"</strong>");
+                    } else {
+                        addResult("NICHT gefunden fuer: " + JSON.stringify(checkObj));
+                    }
+                }
+            } else {
+                addError("Unegueltiges Objekt zum Pruefen.");
+            }
+        }
+
+        function check()
+        {
+            var el, idx, num, oldIdx, hasErrors=false,
+                checkObj = { numbers: [], super: 1};
+
+            clearErrors();
+
+            for(idx=1; idx <= 6; idx++)
+            {
+                el = document.getElementById("n"+idx);
+                if(el && el.value)
+                {
+                    num = parseInt(el.value, 10);
+                    if(num > 0 && num < 50)
+                    {
+                        oldIdx = checkObj.numbers.indexOf(num);
+
+                        if(oldIdx < 0)
+                        {
+                            checkObj.numbers.push(num);
+                        } else {
+                            oldIdx++;
+                            hasErrors = true;
+                            addError("Wiederholte Eingabe in : n"+idx + "|Wert: " + el.value+ 
+                            "|Vorhanden in : n" + oldIdx );    
+                        }
+                        
+                    } else {
+                        hasErrors = true;
+                        addError("Falsche Eingabe in : n"+idx + "|Wert: " + el.value );
+                    }
+                } else {
+                    hasErrors = true;
+                    addError("Kann Eingabe nicht finden fuer : n"+idx);
+                }
+            }
+            el = document.getElementById("sz");
+            if(el && el.value)
+            {
+                num = parseInt(el.value, 10);
+                if(num > 0 && num < 10)
+                {
+                    checkObj.super = num;
+                } else {
+                    hasErrors = true;
+                    addError("Falsche Eingabe Superzahl : " + el.value );
+                }
+            } else {
+                hasErrors = true;
+                addError("Kann Superzahl-Eingabe nicht finden");
+            }
+            if(hasErrors)
+            {
+                addError("<strong>Ueberpruefung nicht moeglich. Fehler vorhanden</strong>", true);
+            } else {
+                compare(checkObj);
+            }
+        }
+
+        function bindHandlers()
+        {
+            var el = document.getElementById("check");
+            if(el)
+            {
+                el.addEventListener("click", check);
+            }
+        }
+
+        window.onload = function()
+        {
+            bindHandlers();
+        };
+    </script>
+</head>
+<body>
+    <h1>Lotto check</h1>
+    <br>
+    <input type="number" value="1" id="n1">
+    <br>
+    <input type="number" value="1" id="n2">
+    <br>
+    <input type="number" value="1" id="n3">
+    <br>
+    <input type="number" value="1" id="n4">
+    <br>
+    <input type="number" value="1" id="n5">
+    <br>
+    <input type="number" value="1" id="n6">
+    <br>
+    Superzahl:
+    <input type="number" value="1" id="sz">
+    <br>
+    <button id="check">Check</button>
+    <br>
+    Ergebnis:
+    <ul id="result">
+
+    </ul>
+    <br>
+    <br>
+    Errors:
+    <ul id="errorlist">
+
+    </ul>
+</body>
+</html>
