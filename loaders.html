@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            *  {
+                margin: 0;
+                padding: 0;
+            }
+            .ex {
+                border: 2px solid salmon;
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+            #main {
+                padding: 1rem;
+                max-width: 800px;
+            }
+            
+        </style>
+        <style id="style1">
+            #code1 {
+                background-color: aquamarine;
+            }
+            .ripple {
+                display: inline-block;
+                position: relative;
+                width: 100px;
+                height: 100px;
+            }
+
+            @keyframes ripple {
+                0% {
+                    top: 40px;
+                    left: 40px;
+                    width: 0;
+                    height: 0;
+                    opacity: 0;
+                }
+                4.9% {
+                    top: 40px;
+                    left: 40px;
+                    width: 0;
+                    height: 0;
+                    opacity: 0;
+                }
+                5% {
+                    top: 40px;
+                    left: 40px;
+                    width: 0;
+                    height: 0;
+                    opacity: 1;
+                }
+                100% {
+                    top: 0px;
+                    left: 0px;
+                    width: 80px;
+                    height: 80px;
+                    opacity: 0;
+                }
+            }
+            .ripple div {
+                position: absolute;
+                border: 4px solid yellow;
+                opacity: 1;
+                border-radius: 50%;
+                animation: ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            }
+            .ripple div:nth-child(2) {
+                animation-delay: -0.5s;
+            }
+            
+        </style>
+        <script id="script1">
+
+        </script>
+    </head>
+    <body>
+        <div id="main">
+
+        
+        <div class="ex">
+            <h1>Ripple</h1>
+            <div id="code1">
+                <div class="ripple">
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+</html>

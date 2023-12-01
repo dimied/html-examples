@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .ex {
+        border: 2px solid salmon;
+        padding: 1rem;
+      }
+    </style>
+    <style id="style1">
+        .zoom {
+            width: 120px;
+            height: 180px;
+            background-color: azure;
+            border-radius: 8px;
+            outline: 2px solid rgba(255, 255, 255, 0.5);
+            outline-offset: -8px;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        .zoom:hover .my-image {
+            transform: scale(1.20);
+            opacity: 1;
+            transition: transform 1s;
+        }
+        .my-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            transition: transform 2s;
+        }
+    </style>
+    <script id="script1"></script>
+  </head>
+  <body>
+    <div id="main">
+      <div class="ex">
+        <h1>Zoom</h1>
+        <div id="code1">
+          <div class="zoom">
+            <img src="./example.png" class="my-image" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
